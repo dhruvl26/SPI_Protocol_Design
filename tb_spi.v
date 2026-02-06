@@ -2,58 +2,34 @@
 
 module tb_SPI;
 
-    reg SYSCLK_P;
-    reg SYSCLK_N;
+    reg SPI_CLK;
     reg reset;
-
-    wire SPI_SDI;
-    wire CSB;
-    wire SPI_LDB;
     wire [59:0] data;
     wire SPI_SDO;
 
     SPI dut (
-        .SYSCLK_P(SYSCLK_P),
-        .SYSCLK_N(SYSCLK_N),
+        .SPI_CLK(SPI_CLK),
         .reset(reset),
-        .SPI_SDI(SPI_SDI),
-        .CSB(CSB),
-        .SPI_LDB(SPI_LDB),
         .data(data),
         .SPI_SDO(SPI_SDO)
     );
+    
+    always #5 SPI_CLK = ~SPI_CLK;
 
-    // ----------------------------------
-    // Differential clock (100 MHz)
-    // ----------------------------------
     initial begin
-        SYSCLK_P = 0;
-        SYSCLK_N = 1;
-        forever #5 begin
-            SYSCLK_P = ~SYSCLK_P;
-            SYSCLK_N = ~SYSCLK_N;
-        end
-    end
-
-    // ----------------------------------
-    // Reset
-    // ----------------------------------
-    initial begin
+        SPI_CLK = 0;
         reset = 1'b1;
         #200 reset = 1'b0;
     end
 
-    // ----------------------------------
-    // Capture SPI SDI
-    // ----------------------------------
     reg [59:0] sdi_capture;
     integer bit_cnt;
     integer frame_cnt;
 
     initial begin
         sdi_capture = 0;
-        bit_cnt     = 0;
-        frame_cnt   = 0;
+        bit_cnt = 0;
+        frame_cnt = 0;
     end
 
     always @(posedge dut.m1.SPI_CLK) begin
@@ -62,10 +38,7 @@ module tb_SPI;
             bit_cnt = bit_cnt + 1;
         end
     end
-
-    // ----------------------------------
-    // Display at end of frame
-    // ----------------------------------
+    
     always @(posedge CSB) begin
         if (bit_cnt == 60) begin
             $display(
@@ -75,17 +48,14 @@ module tb_SPI;
             frame_cnt = frame_cnt + 1;
         end
 
-        bit_cnt     = 0;
+        bit_cnt = 0;
         sdi_capture = 0;
     end
 
-    // ----------------------------------
-    // End simulation
-    // ----------------------------------
     initial begin
         #100000;
-        $display("---- SIMULATION FINISHED ----");
         $finish;
     end
 
 endmodule
+
