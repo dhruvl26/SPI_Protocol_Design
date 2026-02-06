@@ -13,19 +13,6 @@ module slave (
     reg sdo_reg;
     reg ldb_reg;
 
-    // -----------------------------
-    // Bit counter reset on CSB
-    // -----------------------------
-   /* always @(posedge SPI_CSB or posedge reset) begin
-        if (reset)
-            bit_count <= 6'd59;
-        else
-            bit_count <= 6'd59;
-    end */
-
-    // -----------------------------
-    // Receive data (SDI)
-    // -----------------------------
     always @(posedge SPI_CLK or posedge reset) begin
         if (reset) begin
             shift_reg <= 60'd0;
@@ -40,9 +27,6 @@ module slave (
         end
     end
 
-    // -----------------------------
-    // Transmit data (SDO)
-    // -----------------------------
     always @(negedge SPI_CLK or posedge reset) begin
         if (reset)
             sdo_reg <= 1'b0;
@@ -50,16 +34,13 @@ module slave (
             sdo_reg <= shift_reg[bit_count];
     end
 
-    // -----------------------------
-    // Latch output data (LDB)
-    // -----------------------------
     always @(posedge SPI_CSB or posedge SPI_CLK or posedge reset) begin
         if (reset) begin
             data <= 60'd0;
             ldb_reg <= 1'b1;
         end else if (SPI_CSB) begin
             data <= shift_reg;
-            ldb_reg <= 1'b0; // pulse low at end of frame
+            ldb_reg <= 1'b0; 
         end else if (SPI_CLK) begin
         ldb_reg <= 1'b1;
     end
